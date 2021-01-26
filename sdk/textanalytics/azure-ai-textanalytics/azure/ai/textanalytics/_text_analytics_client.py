@@ -30,7 +30,8 @@ from ._response_handlers import (
     pii_entities_result,
     healthcare_paged_result,
     analyze_paged_result,
-    _get_deserialize
+    _get_deserialize,
+    _get_serialize
 )
 from ._lro import TextAnalyticsOperationResourcePolling, TextAnalyticsLROPollingMethod
 
@@ -108,6 +109,25 @@ class TextAnalyticsClient(TextAnalyticsClientBase):
         self._default_country_hint = kwargs.pop("default_country_hint", "US")
         self._string_code_unit = None if kwargs.get("api_version") == "v3.0" else "UnicodeCodePoint"
         self._deserialize = _get_deserialize()
+        self._endpoint = endpoint
+        self._credential = credential
+
+    def _duplicate_client_information(self):
+        # ignore this code when looking at sample.
+        # this just duplicates the info from the multiapi client
+        # to the v3.1-preview.3 client since we don't currently
+        # have support for invoke on multiapi client
+        from ._generated.v3_1_preview_3 import TextAnalyticsClient as _GeneratedClient
+
+        return _GeneratedClient(
+            endpoint=self._client._config.endpoint,
+            credential=self._client._config.credential,
+            authentication_policy=self._client._config.authentication_policy
+        )
+
+    def invoke(self, request, **kwargs):
+        client = self._duplicate_client_information()
+        return client.invoke(request, **kwargs)
 
     @distributed_trace
     def detect_language(  # type: ignore
