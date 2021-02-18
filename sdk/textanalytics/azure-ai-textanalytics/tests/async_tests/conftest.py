@@ -25,8 +25,8 @@
 #
 # --------------------------------------------------------------------------
 import pytest
-from azure.ai.textanalytics import TextAnalyticsClient
-from azure.identity import DefaultAzureCredential
+from azure.ai.textanalytics.aio import TextAnalyticsClient
+from azure.identity.aio import DefaultAzureCredential
 
 @pytest.fixture()
 def documents():
@@ -43,6 +43,8 @@ def documents():
     ]
     return [{"id": str(idx), "text": doc} for idx, doc in enumerate(documents)]
 
-@pytest.fixture()
-def client():
-    return TextAnalyticsClient(endpoint="https://python-textanalytics.cognitiveservices.azure.com/", credential=DefaultAzureCredential())
+@pytest.fixture
+async def client():
+    async with DefaultAzureCredential() as credential:
+        async with TextAnalyticsClient(endpoint="https://python-textanalytics.cognitiveservices.azure.com/", credential=credential) as client:
+            yield client
