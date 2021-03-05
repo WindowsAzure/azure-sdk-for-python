@@ -41,14 +41,15 @@ from . import HttpRequest # pylint: disable=unused-import
 from ._base import (
     HttpTransport,
     HttpResponse,
-    _HttpResponseBase
+    _HttpResponseBase,
+    make_range_header,
+    parse_range_header,
 )
 from ._bigger_block_size_http_adapters import BiggerBlockSizeHTTPAdapter
 
 PipelineType = TypeVar("PipelineType")
 
 _LOGGER = logging.getLogger(__name__)
-
 
 class _RequestsTransportResponseBase(_HttpResponseBase):
     """Base class for accessing response data.
@@ -94,7 +95,7 @@ class _RequestsTransportResponseBase(_HttpResponseBase):
         return self.internal_response.text
 
 
-class StreamDownloadGenerator(object):
+class StreamDownloadGenerator(object):  # pylint: disable=too-many-instance-attributes
     """Generator for streaming response data.
 
     :param pipeline: The pipeline object
@@ -106,8 +107,20 @@ class StreamDownloadGenerator(object):
         self.response = response
         self.block_size = response.block_size
         self.iter_content_func = self.response.internal_response.iter_content(self.block_size)
-        self.content_length = int(response.headers.get('Content-Length', 0))
         self.downloaded = 0
+        headers = response.internal_response.headers
+        self.content_length = int(headers.get('Content-Length', 0))
+        transfer_header = headers.get('Transfer-Encoding', '')
+        self._compressed = 'compress' in transfer_header or 'deflate' in transfer_header or 'gzip' in transfer_header
+        if "x-ms-range" in headers:
+            self.range_header = "x-ms-range"
+            self.range = parse_range_header(headers["x-ms-range"])
+        elif "Range" in headers:
+            self.range_header = "Range"
+            self.range = parse_range_header(headers["Range"])
+        else:
+            self.range_header = None
+        self.etag = headers.get('etag')
 
     def __len__(self):
         return self.content_length
@@ -115,43 +128,62 @@ class StreamDownloadGenerator(object):
     def __iter__(self):
         return self
 
-    def __next__(self):
+    def __next__(self): # pylint:disable=too-many-statements
         retry_active = True
         retry_total = 3
         retry_interval = 1  # 1 second
-        while retry_active:
-            try:
-                chunk = next(self.iter_content_func)
-                if not chunk:
-                    raise StopIteration()
-                self.downloaded += self.block_size
-                return chunk
-            except StopIteration:
+        try:
+            chunk = next(self.iter_content_func)
+            if not chunk:
                 self.response.internal_response.close()
                 raise StopIteration()
-            except (requests.exceptions.ChunkedEncodingError,
-                    requests.exceptions.ConnectionError):
+            self.downloaded += self.block_size
+            return chunk
+        except StopIteration:
+            raise StopIteration()
+        except (requests.exceptions.ChunkedEncodingError,
+                requests.exceptions.ConnectionError) as ex:
+            if self._compressed:
+                raise ex
+            while retry_active:
                 retry_total -= 1
                 if retry_total <= 0:
-                    retry_active = False
+                    _LOGGER.warning("Unable to stream download: %s", ex)
+                    raise ex
+                if not self.etag:
+                    _LOGGER.warning("Unable to stream download: %s", ex)
+                    raise ex
+                time.sleep(retry_interval)
+                headers = self.request.headers.copy()
+                if not self.range_header:
+                    range_header = {'range': 'bytes=' + str(self.downloaded) + '-'}
                 else:
-                    time.sleep(retry_interval)
-                    headers = {'range': 'bytes=' + str(self.downloaded) + '-'}
+                    range_header = {self.range_header: make_range_header(self.range, self.downloaded)}
+                range_header.update({'If-Match': self.etag})
+                headers.update(range_header)
+                try:
                     resp = self.pipeline.run(self.request, stream=True, headers=headers)
-                    if resp.http_response.status_code == 416:
-                        raise
+                    if not resp.http_response:
+                        continue
+                    if resp.http_response.status_code == 412:
+                        raise ex
+                    self.response = resp.http_response
+                    self.iter_content_func = self.response.internal_response.iter_content(self.block_size)
                     chunk = next(self.iter_content_func)
                     if not chunk:
+                        self.response.internal_response.close()
                         raise StopIteration()
-                    self.downloaded += len(chunk)
+                    self.downloaded += self.block_size
                     return chunk
-                continue
-            except requests.exceptions.StreamConsumedError:
-                raise
-            except Exception as err:
-                _LOGGER.warning("Unable to stream download: %s", err)
-                self.response.internal_response.close()
-                raise
+                except StopIteration:
+                    raise StopIteration()
+                except Exception:   # pylint: disable=broad-except
+                    continue
+        except requests.exceptions.StreamConsumedError:
+            raise
+        except Exception as err:
+            _LOGGER.warning("Unable to stream download: %s", err)
+            raise
     next = __next__  # Python 2 compatibility.
 
 

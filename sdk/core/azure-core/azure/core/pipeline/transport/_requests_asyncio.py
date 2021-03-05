@@ -37,7 +37,7 @@ from azure.core.exceptions import (
     ServiceResponseError
 )
 from azure.core.pipeline import Pipeline
-from ._base import HttpRequest
+from ._base import HttpRequest, parse_range_header, make_range_header
 from ._base_async import (
     AsyncHttpResponse,
     _ResponseStopIteration,
@@ -133,7 +133,7 @@ class AsyncioRequestsTransport(RequestsAsyncTransportBase):
         return AsyncioRequestsTransportResponse(request, response, self.connection_config.data_block_size)
 
 
-class AsyncioStreamDownloadGenerator(AsyncIterator):
+class AsyncioStreamDownloadGenerator(AsyncIterator):    # pylint: disable=too-many-instance-attributes
     """Streams the response body data.
 
     :param pipeline: The pipeline object
@@ -147,59 +147,86 @@ class AsyncioStreamDownloadGenerator(AsyncIterator):
         self.response = response
         self.block_size = response.block_size
         self.iter_content_func = self.response.internal_response.iter_content(self.block_size)
-        self.content_length = int(response.headers.get('Content-Length', 0))
         self.downloaded = 0
+        headers = response.internal_response.headers
+        self.content_length = int(headers.get('Content-Length', 0))
+        transfer_header = headers.get('Transfer-Encoding', '')
+        self._compressed = 'compress' in transfer_header or 'deflate' in transfer_header or 'gzip' in transfer_header
+        if "x-ms-range" in headers:
+            self.range_header = "x-ms-range"    # type: Optional[str]
+            self.range = parse_range_header(headers["x-ms-range"])
+        elif "Range" in headers:
+            self.range_header = "Range"
+            self.range = parse_range_header(headers["Range"])
+        else:
+            self.range_header = None
+        self.etag = headers.get('etag')
 
     def __len__(self):
         return self.content_length
 
-    async def __anext__(self):
+    async def __anext__(self):  # pylint:disable=too-many-statements
         loop = _get_running_loop()
         retry_active = True
         retry_total = 3
         retry_interval = 1  # 1 second
-        while retry_active:
-            try:
-                chunk = await loop.run_in_executor(
-                    None,
-                    _iterate_response_content,
-                    self.iter_content_func,
-                )
-                if not chunk:
-                    raise _ResponseStopIteration()
-                self.downloaded += self.block_size
-                return chunk
-            except _ResponseStopIteration:
-                self.response.internal_response.close()
-                raise StopAsyncIteration()
-            except (requests.exceptions.ChunkedEncodingError,
-                    requests.exceptions.ConnectionError):
+        try:
+            chunk = await loop.run_in_executor(
+                None,
+                _iterate_response_content,
+                self.iter_content_func,
+            )
+            if not chunk:
+                raise _ResponseStopIteration()
+            self.downloaded += self.block_size
+            return chunk
+        except _ResponseStopIteration:
+            raise StopAsyncIteration()
+        except (requests.exceptions.ChunkedEncodingError,
+                requests.exceptions.ConnectionError) as ex:
+            if self._compressed:
+                raise ex
+            while retry_active:
                 retry_total -= 1
                 if retry_total <= 0:
-                    retry_active = False
+                    _LOGGER.warning("Unable to stream download: %s", ex)
+                    raise ex
+                if not self.etag:
+                    _LOGGER.warning("Unable to stream download: %s", ex)
+                    raise ex
+                await asyncio.sleep(retry_interval)
+                headers = self.request.headers.copy()
+                if not self.range_header:
+                    range_header = {'range': 'bytes=' + str(self.downloaded) + '-'}
                 else:
-                    await asyncio.sleep(retry_interval)
-                    headers = {'range': 'bytes=' + str(self.downloaded) + '-'}
-                    resp = self.pipeline.run(self.request, stream=True, headers=headers)
-                    if resp.status_code == 416:
-                        raise
+                    range_header = {self.range_header: make_range_header(self.range, self.downloaded)}
+                range_header.update({'If-Match': self.etag})
+                headers.update(range_header)
+                try:
+                    resp = await self.pipeline.run(self.request, stream=True, headers=headers)
+                    if not resp.http_response:
+                        continue
+                    if resp.http_response.status_code == 412:
+                        continue
+                    self.response = resp.http_response
                     chunk = await loop.run_in_executor(
                         None,
                         _iterate_response_content,
                         self.iter_content_func,
                     )
                     if not chunk:
-                        raise StopIteration()
-                    self.downloaded += len(chunk)
+                        raise StopAsyncIteration()
+                    self.downloaded += self.block_size
                     return chunk
-                continue
-            except requests.exceptions.StreamConsumedError:
-                raise
-            except Exception as err:
-                _LOGGER.warning("Unable to stream download: %s", err)
-                self.response.internal_response.close()
-                raise
-
+                except StopAsyncIteration:
+                    raise StopAsyncIteration()
+                except Exception:  # pylint: disable=broad-except
+                    continue
+        except requests.exceptions.StreamConsumedError:
+            raise
+        except Exception as err:
+            _LOGGER.warning("Unable to stream download: %s", err)
+            raise
 
 class AsyncioRequestsTransportResponse(AsyncHttpResponse, RequestsTransportResponse): # type: ignore
     """Asynchronous streaming of data from the response.

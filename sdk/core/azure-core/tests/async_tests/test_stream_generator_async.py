@@ -2,12 +2,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ------------------------------------
+import requests
 from azure.core.pipeline.transport import (
     HttpRequest,
     AsyncHttpResponse,
     AsyncHttpTransport,
+    AsyncioRequestsTransportResponse,
+    AioHttpTransport,
 )
-from azure.core.pipeline import AsyncPipeline
+from azure.core.pipeline import AsyncPipeline, PipelineResponse
 from azure.core.pipeline.transport._aiohttp import AioHttpStreamDownloadGenerator
 from unittest import mock
 import pytest
@@ -15,8 +18,8 @@ import pytest
 @pytest.mark.asyncio
 async def test_connection_error_response():
     class MockTransport(AsyncHttpTransport):
-        def __init__(self):
-            self._count = 0
+        def __init__(self, error=True):
+            self._error = error
 
         async def __aexit__(self, exc_type, exc_val, exc_tb):
             pass
@@ -29,22 +32,24 @@ async def test_connection_error_response():
             request = HttpRequest('GET', 'http://127.0.0.1/')
             response = AsyncHttpResponse(request, None)
             response.status_code = 200
+            response.internal_response = MockInternalResponse(error=False)
             return response
 
     class MockContent():
-        def __init__(self):
-            self._first = True
+        def __init__(self, error=True):
+            self._error = error
 
         async def read(self, block_size):
-            if self._first:
-                self._first = False
+            if self._error:
                 raise ConnectionError
             return None
 
     class MockInternalResponse():
-        def __init__(self):
-            self.headers = {}
-            self.content = MockContent()
+        def __init__(self, error=True):
+            self.headers = {"etag": "etag"}
+            self._error = error
+            self.content = MockContent(error=self._error)
+            self.status_code = 200
 
         async def close(self):
             pass
@@ -90,7 +95,7 @@ async def test_connection_error_416():
             self.headers = {}
             self.content = MockContent()
 
-        async def close(self):
+        def close(self):
             pass
 
     class AsyncMock(mock.MagicMock):
@@ -105,3 +110,50 @@ async def test_connection_error_416():
     with mock.patch('asyncio.sleep', new_callable=AsyncMock):
         with pytest.raises(ConnectionError):
             await stream.__anext__()
+
+@pytest.mark.asyncio
+async def test_response_streaming_error_behavior():
+    # Test to reproduce https://github.com/Azure/azure-sdk-for-python/issues/16723
+    block_size = 103
+    total_response_size = 500
+    req_response = requests.Response()
+    req_request = requests.Request()
+
+    class FakeStreamWithConnectionError:
+        # fake object for urllib3.response.HTTPResponse
+
+        def stream(self, chunk_size, decode_content=False):
+            assert chunk_size == block_size
+            left = total_response_size
+            while left > 0:
+                if left <= block_size:
+                    raise requests.exceptions.ConnectionError()
+                data = b"X" * min(chunk_size, left)
+                left -= len(data)
+                yield data
+
+        def close(self):
+            pass
+
+    req_response.raw = FakeStreamWithConnectionError()
+
+    response = AsyncioRequestsTransportResponse(
+        req_request,
+        req_response,
+        block_size,
+    )
+
+    async def mock_run(self, *args, **kwargs):
+        return PipelineResponse(
+            None,
+            requests.Response(),
+            None,
+        )
+
+    transport = AioHttpTransport()
+    pipeline = AsyncPipeline(transport)
+    pipeline.run = mock_run
+    downloader = response.stream_download(pipeline)
+    with pytest.raises(requests.exceptions.ConnectionError):
+        while True:
+            await downloader.__anext__()

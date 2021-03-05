@@ -2,8 +2,9 @@
 
 ## 1.12.0 (2021-03-08)
 
-### Features
+### Bug Fixes
 
+- Raise exception rather than swallowing it if there is something wrong in retry stream downloading  #16723
 - Added `azure.core.messaging.CloudEvent` model that follows the cloud event spec.
 - Added `azure.core.serialization.NULL` sentinel value
 
