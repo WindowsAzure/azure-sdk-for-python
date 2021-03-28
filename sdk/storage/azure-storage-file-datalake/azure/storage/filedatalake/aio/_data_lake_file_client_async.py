@@ -45,6 +45,9 @@ class DataLakeFileClient(PathClient, DataLakeFileClientBase):
         shared access key, or an instance of a TokenCredentials class from azure.identity.
         If the resource URI already contains a SAS token, this will be ignored in favor of an explicit credential
         - except in the case of AzureSasCredential, where the conflicting SAS tokens will raise a ValueError.
+    :kwarg str snapshot:
+        The optional file snapshot on which to operate. This can be the snapshot ID string
+        or the response returned from :func:`create_snapshot`.
 
     .. admonition:: Example:
 
@@ -480,6 +483,49 @@ class DataLakeFileClient(PathClient, DataLakeFileClientBase):
         """
         downloader = await self._blob_client.download_blob(offset=offset, length=length, **kwargs)
         return StorageStreamDownloader(downloader)
+
+    async def create_snapshot(self, metadata=None, **kwargs):
+        # type: (Optional[Dict[str, str]], **Any) -> Dict[str, Union[str, datetime]]
+        """Creates a snapshot of the file.
+
+        A snapshot is a read-only version of a file that's taken at a point in time.
+        It can be read, copied, or deleted, but not modified. Snapshots provide a way
+        to back up a file as it appears at a moment in time.
+
+        A snapshot of a file has the same name as the base file from which the snapshot
+        is taken, with a DateTime value appended to indicate the time at which the
+        snapshot was taken.
+
+        :param metadata:
+            Name-value pairs associated with the file as metadata.
+        :type metadata: dict(str, str)
+        :keyword ~datetime.datetime if_modified_since:
+            A DateTime value. Azure expects the date value passed in to be UTC.
+            If timezone is included, any non-UTC datetimes will be converted to UTC.
+            If a date is passed in without timezone info, it is assumed to be UTC.
+            Specify this header to perform the operation only
+            if the resource has been modified since the specified time.
+        :keyword ~datetime.datetime if_unmodified_since:
+            A DateTime value. Azure expects the date value passed in to be UTC.
+            If timezone is included, any non-UTC datetimes will be converted to UTC.
+            If a date is passed in without timezone info, it is assumed to be UTC.
+            Specify this header to perform the operation only if
+            the resource has not been modified since the specified date/time.
+        :keyword str etag:
+            An ETag value, or the wildcard character (*). Used to check if the resource has changed,
+            and act according to the condition specified by the `match_condition` parameter.
+        :keyword ~azure.core.MatchConditions match_condition:
+            The match condition to use upon the etag.
+        :keyword lease:
+            If specified, download only succeeds if the file's lease is active
+            and matches this ID. Required if the file has an active lease.
+        :paramtype lease: ~azure.storage.filedatalake.DataLakeLeaseClient or str
+        :keyword int timeout:
+            The timeout parameter is expressed in seconds.
+        :returns: File-updated property dict (Snapshot ID, Etag, and last modified).
+        :rtype: dict[str, Any]
+        """
+        return await self._blob_client.create_snapshot(metadata, **kwargs) # type: ignore
 
     async def rename_file(self, new_name, **kwargs):
         # type: (str, **Any) -> DataLakeFileClient

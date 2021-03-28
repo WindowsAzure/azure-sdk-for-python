@@ -14,6 +14,7 @@ from azure.core.credentials import AzureSasCredential
 
 from azure.core.exceptions import HttpResponseError, ResourceExistsError, ResourceNotFoundError, \
     ClientAuthenticationError, ResourceModifiedError
+from azure.storage.filedatalake import StorageErrorCode
 from azure.storage.filedatalake import ContentSettings, generate_account_sas, generate_file_sas, \
     ResourceTypes, AccountSasPermissions, \
     DataLakeFileClient, FileSystemClient, DataLakeDirectoryClient, FileSasPermissions, generate_file_system_sas, \
@@ -100,6 +101,219 @@ class FileTest(StorageTestCase):
 
         # Assert
         self.assertIsNotNone(response)
+
+    @record
+    def test_snapshot_file_with_if_modified(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        file_client.create_file()
+        test_datetime = (datetime.utcnow() -
+                         timedelta(minutes=15))
+
+        # Act
+        resp = file_client.create_snapshot(if_modified_since=test_datetime)
+
+        # Assert
+        self.assertIsNotNone(resp)
+        self.assertIsNotNone(resp['snapshot'])
+
+    @record
+    def test_get_file_with_snapshot(self):
+        directory_name = self._get_directory_reference(prefix="test")
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        old_data = b"this is the old data"
+        file_client.create_file()
+        file_client.upload_data(old_data, overwrite=True)
+        snapshot = file_client.create_snapshot()
+        file_client.upload_data("this is the new data data", overwrite=True)
+        snapshot_file_client = directory_client.get_file_client("filename", snapshot=snapshot)
+
+        data = snapshot_file_client.download_file()
+        content = data.readall()
+        self.assertEqual(content, old_data)
+
+    @record
+    def test_get_properties_with_snapshot(self):
+        directory_name = self._get_directory_reference(prefix="testdir")
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        file_client.create_file()
+        snapshot = file_client.create_snapshot()
+        file_client.upload_data("this is the new data data", overwrite=True)
+        snapshot_file_client = directory_client.get_file_client("filename", snapshot=snapshot)
+
+        self.assertEqual(snapshot_file_client.get_file_properties().size, 0)
+
+    @record
+    def test_snapshot_file_with_if_modified_fail(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        file_client.create_file()
+        test_datetime = (datetime.utcnow() +
+                         timedelta(minutes=15))
+
+        # Act
+        with self.assertRaises(ResourceModifiedError) as e:
+            file_client.create_snapshot(if_modified_since=test_datetime)
+
+        # Assert
+        self.assertEqual(StorageErrorCode.condition_not_met, e.exception.error_code)
+
+    @record
+    def test_snapshot_file_with_if_unmodified(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        file_client.create_file()
+        test_datetime = (datetime.utcnow() +
+                         timedelta(minutes=15))
+
+        # Act
+        resp = file_client.create_snapshot(if_unmodified_since=test_datetime)
+
+        # Assert
+        self.assertIsNotNone(resp)
+        self.assertIsNotNone(resp['snapshot'])
+
+    @record
+    def test_snapshot_file_with_if_unmodified_fail(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        file_client.create_file()
+        test_datetime = (datetime.utcnow() -
+                         timedelta(minutes=15))
+
+        # Act
+        with self.assertRaises(ResourceModifiedError) as e:
+            file_client.create_snapshot(if_unmodified_since=test_datetime)
+
+        # Assert
+        self.assertEqual(StorageErrorCode.condition_not_met, e.exception.error_code)
+
+    @record
+    def test_snapshot_file_with_if_match(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        file_client.create_file()
+        etag = file_client.get_file_properties().etag
+
+        # Act
+        resp = file_client.create_snapshot(etag=etag, match_condition=MatchConditions.IfNotModified)
+
+        # Assert
+        self.assertIsNotNone(resp)
+        self.assertIsNotNone(resp['snapshot'])
+
+    @record
+    def test_snapshot_file_with_if_match_fail(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        file_client.create_file()
+
+        # Act
+        with self.assertRaises(ResourceModifiedError) as e:
+            file_client.create_snapshot(etag='0x111111111111111', match_condition=MatchConditions.IfNotModified)
+
+        # Assert
+        self.assertEqual(StorageErrorCode.condition_not_met, e.exception.error_code)
+
+    @record
+    def test_snapshot_file_with_if_none_match(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        file_client.create_file()
+
+        # Act
+        resp = file_client.create_snapshot(etag='0x111111111111111', match_condition=MatchConditions.IfModified)
+
+        # Assert
+        self.assertIsNotNone(resp)
+        self.assertIsNotNone(resp['snapshot'])
+
+    @record
+    def test_snapshot_file_with_if_none_match_fail(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        file_client.create_file()
+        etag = file_client.get_file_properties().etag
+
+        # Act
+        with self.assertRaises(ResourceModifiedError) as e:
+            file_client.create_snapshot(etag=etag, match_condition=MatchConditions.IfModified)
+
+        # Assert
+        self.assertEqual(StorageErrorCode.condition_not_met, e.exception.error_code)
+
+    @record
+    def test_snapshot_file_with_lease_id(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        # Act
+        file_client.create_file()
+        good_lease = file_client.acquire_lease()
+        bad_lease = '444badfd-192b-471a-80c2-c36e994e4e0b'
+
+        # Assert
+        file_client.create_snapshot(lease=good_lease)
+        with self.assertRaises(HttpResponseError) as e:
+            file_client.create_snapshot(lease=bad_lease)
+        self.assertEqual('LeaseIdMismatchWithBlobOperation', e.exception.error_code)
 
     @record
     def test_file_exists(self):
@@ -891,5 +1105,7 @@ class FileTest(StorageTestCase):
             f3.download_file().readall()
 
 # ------------------------------------------------------------------------------
+
+
 if __name__ == '__main__':
     unittest.main()

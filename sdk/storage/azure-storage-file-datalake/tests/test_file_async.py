@@ -16,7 +16,7 @@ from azure.core.credentials import AzureSasCredential
 from azure.core.exceptions import HttpResponseError, ResourceExistsError, ResourceNotFoundError, \
     ClientAuthenticationError, ResourceModifiedError
 from azure.storage.filedatalake import ContentSettings, generate_account_sas, generate_file_sas, \
-    ResourceTypes, AccountSasPermissions, FileSasPermissions
+    ResourceTypes, AccountSasPermissions, FileSasPermissions, StorageErrorCode
 from azure.storage.filedatalake.aio import DataLakeServiceClient, FileSystemClient, DataLakeDirectoryClient, \
     DataLakeFileClient
 from testcase import (
@@ -113,6 +113,265 @@ class FileTest(StorageTestCase):
     def test_create_file_async(self):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._test_create_file())
+
+    async def _test_snapshot_file_with_if_modified(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        await directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        await file_client.create_file()
+        test_datetime = (datetime.utcnow() -
+                         timedelta(minutes=15))
+
+        # Act
+        resp = await file_client.create_snapshot(if_modified_since=test_datetime)
+
+        # Assert
+        self.assertIsNotNone(resp)
+        self.assertIsNotNone(resp['snapshot'])
+
+    @record
+    def test_snapshot_file_with_if_modified_async(self):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._test_snapshot_file_with_if_modified())
+
+    async def _test_snapshot_file_with_if_modified_fail(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        await directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        await file_client.create_file()
+        test_datetime = (datetime.utcnow() +
+                         timedelta(minutes=15))
+
+        # Act
+        with self.assertRaises(ResourceModifiedError) as e:
+            await file_client.create_snapshot(if_modified_since=test_datetime)
+
+        # Assert
+        self.assertEqual(StorageErrorCode.condition_not_met, e.exception.error_code)
+
+    @record
+    def test_snapshot_file_with_if_modified_fail_async(self):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._test_snapshot_file_with_if_modified_fail())
+
+    async def _test_snapshot_file_with_if_unmodified(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        await directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        await file_client.create_file()
+        test_datetime = (datetime.utcnow() +
+                         timedelta(minutes=15))
+
+        # Act
+        resp = await file_client.create_snapshot(if_unmodified_since=test_datetime)
+
+        # Assert
+        self.assertIsNotNone(resp)
+        self.assertIsNotNone(resp['snapshot'])
+
+    @record
+    def test_snapshot_file_with_if_unmodified_async(self):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._test_snapshot_file_with_if_unmodified())
+
+    async def _test_get_file_with_snapshot(self):
+        directory_name = self._get_directory_reference(prefix="test")
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        await directory_client.create_directory()
+        file_client = directory_client.get_file_client('filename')
+
+        old_data = b"this is the old data"
+        await file_client.create_file()
+        await file_client.upload_data(old_data, overwrite=True)
+        snapshot = await file_client.create_snapshot()
+        await file_client.upload_data("this is the new data data", overwrite=True)
+        snapshot_file_client = directory_client.get_file_client("filename", snapshot=snapshot)
+
+        data = await snapshot_file_client.download_file()
+        content = await data.readall()
+        self.assertEqual(content, old_data)
+
+    @record
+    def test_get_file_with_snapshot(self):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._test_get_file_with_snapshot())
+
+    async def _test_get_properties_with_snapshot(self):
+        directory_name = self._get_directory_reference(prefix="testdir")
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        await directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        await file_client.create_file()
+        snapshot = await file_client.create_snapshot()
+        await file_client.upload_data("this is the new data data", overwrite=True)
+        snapshot_file_client = directory_client.get_file_client("filename", snapshot=snapshot)
+        snapshot_props = await snapshot_file_client.get_file_properties()
+        self.assertEqual(snapshot_props.size, 0)
+
+    @record
+    def test_get_properties_with_snapshot(self):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._test_get_properties_with_snapshot())
+
+    async def _test_snapshot_file_with_if_unmodified_fail(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        await directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        await file_client.create_file()
+        test_datetime = (datetime.utcnow() -
+                         timedelta(minutes=15))
+
+        # Act
+        with self.assertRaises(ResourceModifiedError) as e:
+            await file_client.create_snapshot(if_unmodified_since=test_datetime)
+
+        # Assert
+        self.assertEqual(StorageErrorCode.condition_not_met, e.exception.error_code)
+
+    @record
+    def test_snapshot_file_with_if_unmodified_fail_async(self):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._test_snapshot_file_with_if_unmodified_fail())
+
+    async def _test_snapshot_file_with_if_match(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        await directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        await file_client.create_file()
+        file_props = await file_client.get_file_properties()
+        etag = file_props.etag
+
+        # Act
+        resp = await file_client.create_snapshot(etag=etag, match_condition=MatchConditions.IfNotModified)
+
+        # Assert
+        self.assertIsNotNone(resp)
+        self.assertIsNotNone(resp['snapshot'])
+
+    @record
+    def test_snapshot_file_with_if_match_async(self):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._test_snapshot_file_with_if_match())
+
+    async def _test_snapshot_file_with_if_match_fail(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        await directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        await file_client.create_file()
+
+        # Act
+        with self.assertRaises(ResourceModifiedError) as e:
+            await file_client.create_snapshot(etag='0x111111111111111', match_condition=MatchConditions.IfNotModified)
+
+        # Assert
+        self.assertEqual(StorageErrorCode.condition_not_met, e.exception.error_code)
+
+    @record
+    def test_snapshot_file_with_if_match_fail_async(self):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._test_snapshot_file_with_if_match_fail())
+
+    async def _test_snapshot_file_with_if_none_match(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        await directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        await file_client.create_file()
+
+        # Act
+        resp = await file_client.create_snapshot(etag='0x111111111111111', match_condition=MatchConditions.IfModified)
+
+        # Assert
+        self.assertIsNotNone(resp)
+        self.assertIsNotNone(resp['snapshot'])
+
+    @record
+    def test_snapshot_file_with_if_none_match_async(self):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._test_snapshot_file_with_if_none_match())
+
+    async def _test_snapshot_file_with_if_none_match_fail(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+
+        # Create a directory to put the file under that
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        await directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        await file_client.create_file()
+        file_props = await file_client.get_file_properties()
+        etag = file_props.etag
+
+        # Act
+        with self.assertRaises(ResourceModifiedError) as e:
+            await file_client.create_snapshot(etag=etag, match_condition=MatchConditions.IfModified)
+
+        # Assert
+        self.assertEqual(StorageErrorCode.condition_not_met, e.exception.error_code)
+
+    @record
+    def test_snapshot_file_with_if_none_match_fail_async(self):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._test_snapshot_file_with_if_none_match_fail())
+
+    async def _test_snapshot_file_with_lease_id(self):
+        # Arrange
+        directory_name = self._get_directory_reference()
+        directory_client = self.dsc.get_directory_client(self.file_system_name, directory_name)
+        await directory_client.create_directory()
+
+        file_client = directory_client.get_file_client('filename')
+        # Act
+        await file_client.create_file()
+        good_lease = await file_client.acquire_lease()
+        bad_lease = '444badfd-192b-471a-80c2-c36e994e4e0b'
+
+        # Assert
+        await file_client.create_snapshot(lease=good_lease)
+        with self.assertRaises(HttpResponseError) as e:
+            await file_client.create_snapshot(lease=bad_lease)
+        self.assertEqual('LeaseIdMismatchWithBlobOperation', e.exception.error_code)
+
+    @record
+    def test_snapshot_file_with_lease_id_async(self):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._test_snapshot_file_with_lease_id())
 
     async def _test_file_exists(self):
         # Arrange

@@ -1,0 +1,160 @@
+interactions:
+- request:
+    body: null
+    headers:
+      User-Agent:
+      - azsdk-python-storage-dfs/12.2.0 Python/3.8.5 (Windows-10-10.0.19041-SP0)
+      x-ms-client-request-id:
+      - 32cc66ff-2ac1-11eb-a3f6-c8348e5fffbf
+      x-ms-date:
+      - Thu, 19 Nov 2020 23:44:43 GMT
+      x-ms-properties:
+      - ''
+      x-ms-version:
+      - '2020-02-10'
+    method: PUT
+    uri: https://storagename.dfs.core.windows.net/filesystem62011626/directory62011626?resource=directory
+  response:
+    body:
+      string: ''
+    headers:
+      Content-Length: '0'
+      Date: Thu, 19 Nov 2020 23:44:42 GMT
+      ETag: '"0x8D88CE516FDD951"'
+      Last-Modified: Thu, 19 Nov 2020 23:44:43 GMT
+      Server: Windows-Azure-HDFS/1.0 Microsoft-HTTPAPI/2.0
+      x-ms-request-id: 0ffc212e-901f-0066-3ccd-beb901000000
+      x-ms-version: '2020-02-10'
+    status:
+      code: 201
+      message: Created
+    url: https://amandaadlscanary2.dfs.core.windows.net/filesystem62011626/directory62011626?resource=directory
+- request:
+    body: null
+    headers:
+      User-Agent:
+      - azsdk-python-storage-dfs/12.2.0 Python/3.8.5 (Windows-10-10.0.19041-SP0)
+      x-ms-client-request-id:
+      - 33085808-2ac1-11eb-8f75-c8348e5fffbf
+      x-ms-date:
+      - Thu, 19 Nov 2020 23:44:43 GMT
+      x-ms-properties:
+      - ''
+      x-ms-version:
+      - '2020-02-10'
+    method: PUT
+    uri: https://storagename.dfs.core.windows.net/filesystem62011626/directory62011626%2Ffilename?resource=file
+  response:
+    body:
+      string: ''
+    headers:
+      Content-Length: '0'
+      Date: Thu, 19 Nov 2020 23:44:42 GMT
+      ETag: '"0x8D88CE5170C7BD6"'
+      Last-Modified: Thu, 19 Nov 2020 23:44:43 GMT
+      Server: Windows-Azure-HDFS/1.0 Microsoft-HTTPAPI/2.0
+      x-ms-request-id: 0ffc212f-901f-0066-3dcd-beb901000000
+      x-ms-version: '2020-02-10'
+    status:
+      code: 201
+      message: Created
+    url: https://amandaadlscanary2.dfs.core.windows.net/filesystem62011626/directory62011626%2Ffilename?resource=file
+- request:
+    body: null
+    headers:
+      User-Agent:
+      - azsdk-python-storage-dfs/12.2.0 Python/3.8.5 (Windows-10-10.0.19041-SP0)
+      x-ms-client-request-id:
+      - 33163abc-2ac1-11eb-82dd-c8348e5fffbf
+      x-ms-date:
+      - Thu, 19 Nov 2020 23:44:43 GMT
+      x-ms-lease-action:
+      - acquire
+      x-ms-lease-duration:
+      - '-1'
+      x-ms-proposed-lease-id:
+      - 99fdcc15-21b3-4bfe-993d-c394e794b31e
+      x-ms-version:
+      - '2020-02-10'
+    method: PUT
+    uri: https://storagename.blob.core.windows.net/filesystem62011626/directory62011626/filename?comp=lease
+  response:
+    body:
+      string: ''
+    headers:
+      Content-Length: '0'
+      Date: Thu, 19 Nov 2020 23:44:43 GMT
+      ETag: '"0x8D88CE5170C7BD6"'
+      Last-Modified: Thu, 19 Nov 2020 23:44:43 GMT
+      Server: Windows-Azure-Blob/1.0 Microsoft-HTTPAPI/2.0
+      x-ms-lease-id: 99fdcc15-21b3-4bfe-993d-c394e794b31e
+      x-ms-request-id: 35064baa-801e-0045-78cd-be23c2000000
+      x-ms-version: '2020-02-10'
+    status:
+      code: 201
+      message: Created
+    url: https://amandaadlscanary2.blob.core.windows.net/filesystem62011626/directory62011626/filename?comp=lease
+- request:
+    body: null
+    headers:
+      User-Agent:
+      - azsdk-python-storage-dfs/12.2.0 Python/3.8.5 (Windows-10-10.0.19041-SP0)
+      x-ms-client-request-id:
+      - 332494c3-2ac1-11eb-a587-c8348e5fffbf
+      x-ms-date:
+      - Thu, 19 Nov 2020 23:44:44 GMT
+      x-ms-lease-id:
+      - 99fdcc15-21b3-4bfe-993d-c394e794b31e
+      x-ms-version:
+      - '2020-02-10'
+    method: PUT
+    uri: https://storagename.blob.core.windows.net/filesystem62011626/directory62011626/filename?comp=snapshot
+  response:
+    body:
+      string: ''
+    headers:
+      Content-Length: '0'
+      Date: Thu, 19 Nov 2020 23:44:43 GMT
+      ETag: '"0x8D88CE5170C7BD6"'
+      Last-Modified: Thu, 19 Nov 2020 23:44:43 GMT
+      Server: Windows-Azure-Blob/1.0 Microsoft-HTTPAPI/2.0
+      x-ms-request-id: 35064bac-801e-0045-7acd-be23c2000000
+      x-ms-request-server-encrypted: 'true'
+      x-ms-snapshot: '2020-11-19T23:44:43.7620299Z'
+      x-ms-version: '2020-02-10'
+    status:
+      code: 201
+      message: Created
+    url: https://amandaadlscanary2.blob.core.windows.net/filesystem62011626/directory62011626/filename?comp=snapshot
+- request:
+    body: null
+    headers:
+      User-Agent:
+      - azsdk-python-storage-dfs/12.2.0 Python/3.8.5 (Windows-10-10.0.19041-SP0)
+      x-ms-client-request-id:
+      - 334176d4-2ac1-11eb-9895-c8348e5fffbf
+      x-ms-date:
+      - Thu, 19 Nov 2020 23:44:44 GMT
+      x-ms-lease-id:
+      - 444badfd-192b-471a-80c2-c36e994e4e0b
+      x-ms-version:
+      - '2020-02-10'
+    method: PUT
+    uri: https://storagename.blob.core.windows.net/filesystem62011626/directory62011626/filename?comp=snapshot
+  response:
+    body:
+      string: "\uFEFF<?xml version=\"1.0\" encoding=\"utf-8\"?><Error><Code>LeaseIdMismatchWithBlobOperation</Code><Message>The
+        lease ID specified did not match the lease ID for the blob.\nRequestId:35064bb8-801e-0045-7fcd-be23c2000000\nTime:2020-11-19T23:44:43.8732827Z</Message></Error>"
+    headers:
+      Content-Length: '264'
+      Content-Type: application/xml
+      Date: Thu, 19 Nov 2020 23:44:43 GMT
+      Server: Windows-Azure-Blob/1.0 Microsoft-HTTPAPI/2.0
+      x-ms-error-code: LeaseIdMismatchWithBlobOperation
+      x-ms-request-id: 35064bb8-801e-0045-7fcd-be23c2000000
+      x-ms-version: '2020-02-10'
+    status:
+      code: 412
+      message: The lease ID specified did not match the lease ID for the blob.
+    url: https://amandaadlscanary2.blob.core.windows.net/filesystem62011626/directory62011626/filename?comp=snapshot
+version: 1
