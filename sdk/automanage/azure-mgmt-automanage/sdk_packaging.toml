@@ -1,0 +1,6 @@
+[packaging]
+package_name = "azure-mgmt-automanage"
+package_pprint_name = "Auto Management"
+package_doc_id = "automanage"
+is_stable = false
+is_arm = true
