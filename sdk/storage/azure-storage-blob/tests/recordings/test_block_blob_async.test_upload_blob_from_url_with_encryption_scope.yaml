@@ -1,0 +1,155 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - application/xml
+      User-Agent:
+      - azsdk-python-storage-blob/12.8.1b1 Python/3.7.3 (Windows-10-10.0.19041-SP0)
+      x-ms-date:
+      - Thu, 22 Apr 2021 22:27:18 GMT
+      x-ms-version:
+      - '2020-06-12'
+    method: PUT
+    uri: https://storagename.blob.core.windows.net/utcontainerddf81c79?restype=container
+  response:
+    body:
+      string: "\uFEFF<?xml version=\"1.0\" encoding=\"utf-8\"?><Error><Code>ContainerAlreadyExists</Code><Message>The
+        specified container already exists.\nRequestId:c949fcea-301e-002c-3fc6-37bf5b000000\nTime:2021-04-22T22:27:18.9091820Z</Message></Error>"
+    headers:
+      content-length: '230'
+      content-type: application/xml
+      date: Thu, 22 Apr 2021 22:27:18 GMT
+      server: Windows-Azure-Blob/1.0 Microsoft-HTTPAPI/2.0
+      x-ms-error-code: ContainerAlreadyExists
+      x-ms-version: '2020-06-12'
+    status:
+      code: 409
+      message: The specified container already exists.
+    url: https://emilydevtest.blob.core.windows.net/utcontainerddf81c79?restype=container
+- request:
+    body: source blob data
+    headers:
+      Accept:
+      - application/xml
+      Content-Length:
+      - '16'
+      Content-Type:
+      - application/octet-stream
+      User-Agent:
+      - azsdk-python-storage-blob/12.8.1b1 Python/3.7.3 (Windows-10-10.0.19041-SP0)
+      x-ms-blob-type:
+      - BlockBlob
+      x-ms-date:
+      - Thu, 22 Apr 2021 22:27:18 GMT
+      x-ms-encryption-algorithm:
+      - AES256
+      x-ms-encryption-scope:
+      - test
+      x-ms-version:
+      - '2020-06-12'
+    method: PUT
+    uri: https://storagename.blob.core.windows.net/utcontainerddf81c79/blobddf81c79
+  response:
+    body:
+      string: ''
+    headers:
+      content-length: '0'
+      content-md5: 2aOcYFcVKStc87w7K+aH2w==
+      date: Thu, 22 Apr 2021 22:27:18 GMT
+      etag: '"0x8D905DDCA481C98"'
+      last-modified: Thu, 22 Apr 2021 22:27:18 GMT
+      server: Windows-Azure-Blob/1.0 Microsoft-HTTPAPI/2.0
+      x-ms-content-crc64: hZmqWo4qMrE=
+      x-ms-encryption-scope: test
+      x-ms-request-server-encrypted: 'true'
+      x-ms-version: '2020-06-12'
+    status:
+      code: 201
+      message: Created
+    url: https://emilydevtest.blob.core.windows.net/utcontainerddf81c79/blobddf81c79
+- request:
+    body: null
+    headers:
+      Accept:
+      - application/xml
+      Content-Length:
+      - '0'
+      User-Agent:
+      - azsdk-python-storage-blob/12.8.1b1 Python/3.7.3 (Windows-10-10.0.19041-SP0)
+      x-ms-blob-type:
+      - BlockBlob
+      x-ms-copy-source:
+      - https://emilydevtest.blob.core.windows.net/utcontainerddf81c79/blobddf81c79?se=2021-04-22T23%3A27%3A18Z&sp=rt&sv=2020-06-12&sr=b&sig=IqnyM6/Um7Fgt3VubBdAN8qvTV2roX4wjxvsPhF%2BSpA%3D
+      x-ms-copy-source-blob-properties:
+      - 'true'
+      x-ms-date:
+      - Thu, 22 Apr 2021 22:27:18 GMT
+      x-ms-encryption-algorithm:
+      - AES256
+      x-ms-encryption-scope:
+      - test1
+      x-ms-version:
+      - '2020-06-12'
+    method: PUT
+    uri: https://storagename.blob.core.windows.net/utcontainerddf81c79/blobcopyddf81c79
+  response:
+    body:
+      string: ''
+    headers:
+      content-length: '0'
+      date: Thu, 22 Apr 2021 22:27:18 GMT
+      etag: '"0x8D905DDCA5F058F"'
+      last-modified: Thu, 22 Apr 2021 22:27:19 GMT
+      server: Windows-Azure-Blob/1.0 Microsoft-HTTPAPI/2.0
+      x-ms-content-crc64: hZmqWo4qMrE=
+      x-ms-encryption-scope: test1
+      x-ms-request-server-encrypted: 'true'
+      x-ms-version: '2020-06-12'
+    status:
+      code: 201
+      message: Created
+    url: https://emilydevtest.blob.core.windows.net/utcontainerddf81c79/blobcopyddf81c79
+- request:
+    body: null
+    headers:
+      Accept:
+      - application/xml
+      User-Agent:
+      - azsdk-python-storage-blob/12.8.1b1 Python/3.7.3 (Windows-10-10.0.19041-SP0)
+      x-ms-date:
+      - Thu, 22 Apr 2021 22:27:19 GMT
+      x-ms-encryption-algorithm:
+      - AES256
+      x-ms-range:
+      - bytes=0-33554431
+      x-ms-version:
+      - '2020-06-12'
+    method: GET
+    uri: https://storagename.blob.core.windows.net/utcontainerddf81c79/blobcopyddf81c79
+  response:
+    body:
+      string: source blob data
+    headers:
+      accept-ranges: bytes
+      content-length: '16'
+      content-range: bytes 0-15/16
+      content-type: application/octet-stream
+      date: Thu, 22 Apr 2021 22:27:18 GMT
+      etag: '"0x8D905DDCA5F058F"'
+      last-modified: Thu, 22 Apr 2021 22:27:19 GMT
+      server: Windows-Azure-Blob/1.0 Microsoft-HTTPAPI/2.0
+      vary: Origin
+      x-ms-blob-content-md5: 2aOcYFcVKStc87w7K+aH2w==
+      x-ms-blob-type: BlockBlob
+      x-ms-creation-time: Thu, 22 Apr 2021 22:27:19 GMT
+      x-ms-encryption-scope: test1
+      x-ms-lease-state: available
+      x-ms-lease-status: unlocked
+      x-ms-server-encrypted: 'true'
+      x-ms-version: '2020-06-12'
+    status:
+      code: 206
+      message: Partial Content
+    url: https://emilydevtest.blob.core.windows.net/utcontainerddf81c79/blobcopyddf81c79
+version: 1
