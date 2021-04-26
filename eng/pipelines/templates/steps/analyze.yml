@@ -5,6 +5,8 @@ parameters:
   AdditionalTestArgs: ''
   Artifacts: []
   TestPipeline: false
+  VerifyAutorest: true
+  GenerateAutorest: false
 
 steps:
   - template: /eng/pipelines/templates/steps/analyze_dependency.yml
@@ -116,9 +118,19 @@ steps:
       TestMarkArgument: ${{ parameters.TestMarkArgument }}
       AdditionalTestArgs: ${{parameters.AdditionalTestArgs}}
 
+  - ${{if eq(parameters.VerifyAutorest, 'true')}}:
+    - template: ../steps/verify-autorest.yml
+      parameters:
+        ServiceDirectory: ${{ parameters.ServiceDirectory }}
+
   - template: /eng/common/pipelines/templates/steps/create-apireview.yml
     parameters:
       Artifacts: ${{ parameters.Artifacts }}
+
+  - ${{ if eq(parameters.GenerateAutorest, 'true')}}:
+    - template: /eng/common/pipelines/templates/steps/generate-autorest.yml
+      parameters:
+        Artifacts: ${{ parameters.Artifacts }}
 
   - template: /eng/common/pipelines/templates/steps/eng-common-workflow-enforcer.yml
 
