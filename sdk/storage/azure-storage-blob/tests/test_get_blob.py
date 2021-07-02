@@ -5,22 +5,18 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+import uuid
 import pytest
 import base64
-import unittest
-import uuid
 from os import path, remove, sys, urandom
-from azure.core.exceptions import HttpResponseError
-from devtools_testutils import ResourceGroupPreparer, StorageAccountPreparer
 
+from _shared.testcase import StorageTestCase, GlobalStorageAccountPreparer
+from azure.core.exceptions import HttpResponseError
 from azure.storage.blob import (
     BlobServiceClient,
-    ContainerClient,
-    BlobClient,
     StorageErrorCode,
-    BlobProperties
-)
-from _shared.testcase import GlobalStorageAccountPreparer
+    BlobProperties,
+    ContentSettings)
 from devtools_testutils.storage import StorageTestCase
 
 # ------------------------------------------------------------------------------
@@ -144,6 +140,25 @@ class StorageGetBlobTest(StorageTestCase):
 
         # Assert
         self.assertEqual(self.byte_data, content)
+
+    @pytest.mark.live_test_only
+    @GlobalStorageAccountPreparer()
+    def test_get_blob_in_raw_stream(self, resource_group, location, storage_account, storage_account_key):
+        # recording mechanism cannot detect the decompress option properly, it always try to decompress the body
+        # as long as the content-encoding header is in response, so mark this as live test only
+        self._setup(storage_account, storage_account_key)
+        blob_name = self._get_blob_reference()
+        blob = self.bsc.get_blob_client(self.container_name, blob_name)
+        file_path = os.path.abspath(os.path.join(os.path.abspath(__file__), "..", "./resources/testgzip.txt.gz"))
+
+        with open(file_path, 'rb') as stream:
+            data = stream.read()
+            blob.upload_blob(data, content_settings=ContentSettings(content_encoding='gzip'), overwrite=True)
+
+        content = blob.download_blob(offset=1024, length=512, decompress=False).readall()
+
+        # Assert
+        self.assertEqual(data[1024: 1024 + 512], content)
 
     @pytest.mark.live_test_only
     @GlobalStorageAccountPreparer()

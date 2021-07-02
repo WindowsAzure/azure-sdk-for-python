@@ -586,6 +586,9 @@ class DataLakeFileClient(PathClient):
             and act according to the condition specified by the `match_condition` parameter.
         :keyword ~azure.core.MatchConditions match_condition:
             The match condition to use upon the etag.
+        :keyword bool decompress:
+            This is True by default. Set it to False to disable the file content auto-decompress.
+            eg. If the content-encoding of the file is set to gzip, setting decompress to False to avoid unzipping.
         :keyword int max_concurrency:
             The number of parallel connections with which to download.
         :keyword int timeout:

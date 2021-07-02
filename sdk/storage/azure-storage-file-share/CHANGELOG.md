@@ -1,5 +1,9 @@
 # Release History
 
+## 12.5.1 (2021-06-25) 
+**Fixes**
+- Fixed the auto decompress response body bug, and let user opt in decompress or not.
+
 ## 12.5.0 (2021-06-09)
 **New features**
 - Added support for lease operation on a share, eg. acquire_lease

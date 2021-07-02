@@ -76,6 +76,7 @@ class _ChunkDownloader(object):  # pylint: disable=too-many-instance-attributes
         parallel=None,
         validate_content=None,
         encryption_options=None,
+        decompress=True,
         etag=None,
         **kwargs
     ):
@@ -104,6 +105,7 @@ class _ChunkDownloader(object):  # pylint: disable=too-many-instance-attributes
 
         # Parameters for each get operation
         self.validate_content = validate_content
+        self.decompress = decompress
         self.request_options = kwargs
 
     def _calculate_range(self, chunk_start):
@@ -161,6 +163,7 @@ class _ChunkDownloader(object):  # pylint: disable=too-many-instance-attributes
                 validate_content=self.validate_content,
                 data_stream_total=self.total_size,
                 download_stream_current=self.progress_total,
+                decompress=self.decompress,
                 **self.request_options
             )
             if response.properties.etag != self.etag:
@@ -273,6 +276,7 @@ class StorageStreamDownloader(object):  # pylint: disable=too-many-instance-attr
         self._encoding = encoding
         self._validate_content = validate_content
         self._encryption_options = encryption_options or {}
+        self._decompress = kwargs.pop("decompress", True)
         self._request_options = kwargs
         self._location_mode = None
         self._download_complete = False
@@ -348,6 +352,7 @@ class StorageStreamDownloader(object):  # pylint: disable=too-many-instance-attr
                 validate_content=self._validate_content,
                 data_stream_total=None,
                 download_stream_current=0,
+                decompress=self._decompress,
                 **self._request_options
             )
 
@@ -376,6 +381,7 @@ class StorageStreamDownloader(object):  # pylint: disable=too-many-instance-attr
                         validate_content=self._validate_content,
                         data_stream_total=0,
                         download_stream_current=0,
+                        decompress=self._decompress,
                         **self._request_options
                     )
                 except HttpResponseError as error:
@@ -418,6 +424,7 @@ class StorageStreamDownloader(object):  # pylint: disable=too-many-instance-attr
                 parallel=False,
                 validate_content=self._validate_content,
                 encryption_options=self._encryption_options,
+                decompress=self._decompress,
                 use_location=self._location_mode,
                 etag=self._etag,
                 **self._request_options
