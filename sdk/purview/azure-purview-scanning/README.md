@@ -52,7 +52,7 @@ from azure.purview.scanning import PurviewScanningClient
 from azure.identity import DefaultAzureCredential
 
 credential = DefaultAzureCredential()
-client = PurviewScanningClient(endpoint="https://<my-account-name>.scanning.purview.azure.com", credential=credential)
+client = PurviewScanningClient(endpoint="https://<my-account-name>.scan.purview.azure.com", credential=credential)
 ```
 
 ## Key concepts
@@ -77,7 +77,7 @@ from azure.purview.scanning.rest import data_sources
 from azure.core.exceptions import HttpResponseError
 
 credential = DefaultAzureCredential()
-client = PurviewScanningClient(endpoint="https://<my-account-name>.scanning.purview.azure.com", credential=credential)
+client = PurviewScanningClient(endpoint="https://<my-account-name>.scan.purview.azure.com", credential=credential)
 
 request = data_sources.build_list_all_request()
 
@@ -124,7 +124,7 @@ logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler(stream=sys.stdout)
 logger.addHandler(handler)
 
-endpoint = "https://<my-account-name>.scanning.purview.azure.com"
+endpoint = "https://<my-account-name>.scan.purview.azure.com"
 credential = DefaultAzureCredential()
 
 # This client will log detailed information about its HTTP sessions, at DEBUG level
@@ -165,6 +165,7 @@ This project has adopted the [Microsoft Open Source Code of Conduct][code_of_con
 [default_azure_credential]: https://github.com/Azure/azure-sdk-for-python/tree/main/sdk/identity/azure-identity#defaultazurecredential
 [request_builders_and_client]: https://aka.ms/azsdk/python/protocol/quickstart
 [enable_aad]: https://docs.microsoft.com/azure/purview/create-catalog-portal#add-a-security-principal-to-a-data-plane-role
+[azure_core]: https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/core/azure-core/README.md
 [python_logging]: https://docs.python.org/3.5/library/logging.html
 [cla]: https://cla.microsoft.com
 [code_of_conduct]: https://opensource.microsoft.com/codeofconduct/
