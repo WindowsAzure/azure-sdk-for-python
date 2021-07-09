@@ -24,7 +24,8 @@ from ._shared.models import(
     UserDelegationKey
 )
 from ._generated.models import (
-    RehydratePriority
+    RehydratePriority,
+    BlobImmutabilityPolicyMode
 )
 from ._models import (
     BlobType,
@@ -195,6 +196,7 @@ __all__ = [
     'StandardBlobTier',
     'PremiumPageBlobTier',
     'SequenceNumberAction',
+    'BlobImmutabilityPolicyMode',
     'PublicAccess',
     'BlobAnalyticsLogging',
     'Metrics',
