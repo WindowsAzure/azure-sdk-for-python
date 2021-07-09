@@ -19,19 +19,9 @@ import pytest
 
 from helpers import build_aad_response, mock_response, Request
 from helpers_async import async_validating_transport, AsyncMockTransport, get_completed_future
+from test_managed_identity import ALL_ENVIRONMENTS
 
 MANAGED_IDENTITY_ENVIRON = "azure.identity.aio._credentials.managed_identity.os.environ"
-ALL_ENVIRONMENTS = (
-    {EnvironmentVariables.MSI_ENDPOINT: "...", EnvironmentVariables.MSI_SECRET: "..."},  # App Service
-    {EnvironmentVariables.MSI_ENDPOINT: "..."},  # Cloud Shell
-    {  # Service Fabric
-        EnvironmentVariables.IDENTITY_ENDPOINT: "...",
-        EnvironmentVariables.IDENTITY_HEADER: "...",
-        EnvironmentVariables.IDENTITY_SERVER_THUMBPRINT: "...",
-    },
-    {EnvironmentVariables.IDENTITY_ENDPOINT: "...", EnvironmentVariables.IMDS_ENDPOINT: "..."},  # Arc
-    {},  # IMDS
-)
 
 
 @pytest.mark.asyncio
@@ -59,6 +49,17 @@ async def test_context_manager(environ):
 
     assert transport.__aenter__.call_count == 1
     assert transport.__aexit__.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_close_incomplete_configuration():
+    await ManagedIdentityCredential().close()
+
+
+@pytest.mark.asyncio
+async def test_context_manager_incomplete_configuration():
+    async with ManagedIdentityCredential():
+        pass
 
 
 @pytest.mark.asyncio
@@ -453,7 +454,9 @@ async def test_client_id_none():
     assert token.token == expected_access_token
 
     with mock.patch.dict(
-        MANAGED_IDENTITY_ENVIRON, {EnvironmentVariables.MSI_ENDPOINT: "https://localhost"}, clear=True,
+        MANAGED_IDENTITY_ENVIRON,
+        {EnvironmentVariables.MSI_ENDPOINT: "https://localhost"},
+        clear=True,
     ):
         credential = ManagedIdentityCredential(client_id=None, transport=mock.Mock(send=send))
         token = await credential.get_token(scope)

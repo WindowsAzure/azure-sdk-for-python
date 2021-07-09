@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ------------------------------------
+from azure.identity._credentials import managed_identity
 import os
 import time
 
@@ -23,6 +24,51 @@ import pytest
 from helpers import build_aad_response, validating_transport, mock_response, Request
 
 MANAGED_IDENTITY_ENVIRON = "azure.identity._credentials.managed_identity.os.environ"
+ALL_ENVIRONMENTS = (
+    {EnvironmentVariables.MSI_ENDPOINT: "...", EnvironmentVariables.MSI_SECRET: "..."},  # App Service
+    {EnvironmentVariables.MSI_ENDPOINT: "..."},  # Cloud Shell
+    {  # Service Fabric
+        EnvironmentVariables.IDENTITY_ENDPOINT: "...",
+        EnvironmentVariables.IDENTITY_HEADER: "...",
+        EnvironmentVariables.IDENTITY_SERVER_THUMBPRINT: "...",
+    },
+    {EnvironmentVariables.IDENTITY_ENDPOINT: "...", EnvironmentVariables.IMDS_ENDPOINT: "..."},  # Arc
+    {},  # IMDS
+)
+
+
+@pytest.mark.parametrize("environ", ALL_ENVIRONMENTS)
+def test_close(environ):
+    transport = mock.MagicMock()
+    with mock.patch.dict("os.environ", environ, clear=True):
+        credential = ManagedIdentityCredential(transport=transport)
+    assert transport.__exit__.call_count == 0
+
+    credential.close()
+    assert transport.__exit__.call_count == 1
+
+
+@pytest.mark.parametrize("environ", ALL_ENVIRONMENTS)
+def test_context_manager(environ):
+    transport = mock.MagicMock()
+    with mock.patch.dict("os.environ", environ, clear=True):
+        credential = ManagedIdentityCredential(transport=transport)
+
+    with credential:
+        assert transport.__enter__.call_count == 1
+        assert transport.__exit__.call_count == 0
+
+    assert transport.__enter__.call_count == 1
+    assert transport.__exit__.call_count == 1
+
+
+def test_close_incomplete_configuration():
+    ManagedIdentityCredential().close()
+
+
+def test_context_manager_incomplete_configuration():
+    with ManagedIdentityCredential():
+        pass
 
 
 def test_cloud_shell():
@@ -491,7 +537,9 @@ def test_client_id_none():
 
     # Cloud Shell
     with mock.patch.dict(
-        MANAGED_IDENTITY_ENVIRON, {EnvironmentVariables.MSI_ENDPOINT: "https://localhost"}, clear=True,
+        MANAGED_IDENTITY_ENVIRON,
+        {EnvironmentVariables.MSI_ENDPOINT: "https://localhost"},
+        clear=True,
     ):
         credential = ManagedIdentityCredential(client_id=None, transport=mock.Mock(send=send))
         token = credential.get_token(scope)
