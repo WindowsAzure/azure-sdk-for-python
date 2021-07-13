@@ -122,7 +122,7 @@ will raise an `HttpResponseError`. Calling it on a good response will do nothing
 ### Features
 
 - Support params as list for exploding parameters  #12410
-
+- Create multiapi base client   #10179
 
 ## 1.7.0 (2020-07-06)
 
