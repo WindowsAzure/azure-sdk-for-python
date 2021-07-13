@@ -150,6 +150,27 @@ class StorageBlockBlobTestAsync(AsyncStorageTestCase):
         new_blob_content = await new_blob_download.readall()
         self.assertEqual(new_blob_content, b'source blob data')
 
+    @pytest.mark.playback_test_only
+    @GlobalStorageAccountPreparer()
+    async def test_upload_blob_from_url_with_encryption_scope(
+            self, resource_group, location, storage_account, storage_account_key):
+        await self._setup(storage_account, storage_account_key)
+        blob = await self._create_blob(data=b"source blob data", overwrite=True, encryption_scope="test")
+        # Act
+        sas = "se=2021-04-22T23%3A27%3A18Z&sp=rt&sv=2020-06-12&sr=b&sig=IqnyM6/Um7Fgt3VubBdAN8qvTV2roX4wjxvsPhF%2BSpA%3D"
+        source_blob = '{0}/{1}/{2}?{3}'.format(
+            self.account_url(storage_account, "blob"), self.container_name, blob.blob_name, sas)
+
+        blob_name = self.get_resource_name("blobcopy")
+        new_blob_client = self.bsc.get_blob_client(self.container_name, blob_name)
+
+        new_blob = await new_blob_client.upload_blob_from_url(source_blob, overwrite=True, encryption_scope="test1")
+        self.assertIsNotNone(new_blob)
+        downloader = await new_blob_client.download_blob()
+        new_blob_content = await downloader.readall()
+        self.assertEqual(downloader.properties['encryption_scope'], "test1")
+        self.assertEqual(new_blob_content, b'source blob data')
+
     @GlobalStorageAccountPreparer()
     @AsyncStorageTestCase.await_prepared_test
     async def test_upload_blob_from_url_with_existing_blob(
