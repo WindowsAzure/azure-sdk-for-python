@@ -46,6 +46,13 @@ from .._models import (
     RecognizeLinkedEntitiesAction,
     AnalyzeSentimentAction,
     AnalyzeHealthcareEntitiesResult,
+    ExtractSummaryAction,
+    ExtractSummaryResult,
+    ClassifyDocumentAction,
+    RecognizeCustomEntitiesAction,
+    ClassifyDocumentResult,
+    MultiClassifyDocumentAction,
+    MultiClassifyDocumentResult
 )
 from .._lro import TextAnalyticsOperationResourcePolling
 from ._lro_async import (
@@ -847,6 +854,10 @@ class TextAnalyticsClient(AsyncTextAnalyticsClientBase):
                 RecognizePiiEntitiesAction,
                 ExtractKeyPhrasesAction,
                 AnalyzeSentimentAction,
+                ExtractSummaryAction,
+                ClassifyDocumentAction,
+                RecognizeCustomEntitiesAction,
+                MultiClassifyDocumentAction
             ]
         ],  # pylint: disable=line-too-long
         **kwargs: Any,
@@ -859,6 +870,9 @@ class TextAnalyticsClient(AsyncTextAnalyticsClientBase):
                     RecognizePiiEntitiesResult,
                     ExtractKeyPhrasesResult,
                     AnalyzeSentimentResult,
+                    ExtractSummaryResult,
+                    ClassifyDocumentResult,
+                    MultiClassifyDocumentResult,
                     DocumentError,
                 ]
             ]
@@ -884,7 +898,8 @@ class TextAnalyticsClient(AsyncTextAnalyticsClientBase):
             Duplicate actions in list not supported.
         :type actions:
             list[RecognizeEntitiesAction or RecognizePiiEntitiesAction or ExtractKeyPhrasesAction or
-            RecognizeLinkedEntitiesAction or AnalyzeSentimentAction]
+            RecognizeLinkedEntitiesAction or AnalyzeSentimentAction or ExtractSummaryAction
+            or RecognizeCustomEntitiesAction or ClassifyDocumentAction or MultiClassifyDocumentAction]
         :keyword str display_name: An optional display name to set for the requested analysis.
         :keyword str language: The 2 letter ISO 639-1 representation of language for the
             entire batch. For example, use "en" for English; "es" for Spanish etc.
@@ -908,8 +923,15 @@ class TextAnalyticsClient(AsyncTextAnalyticsClientBase):
         :rtype:
             ~azure.ai.textanalytics.aio.AsyncAnalyzeActionsLROPoller[~azure.core.async_paging.AsyncItemPaged[
             list[Union[RecognizeEntitiesResult, RecognizeLinkedEntitiesResult, RecognizePiiEntitiesResult,
-            ExtractKeyPhrasesResult, AnalyzeSentimentResult, DocumentError]]]]
+            ExtractKeyPhrasesResult, AnalyzeSentimentResult, ExtractSummaryResult, ClassifyDocumentResult,
+            MultiClassifyDocumentResult, DocumentError]]]]
         :raises ~azure.core.exceptions.HttpResponseError or TypeError or ValueError or NotImplementedError:
+
+        .. versionadded:: v3.1
+            The *begin_analyze_actions* client method.
+        .. versionadded:: v3.2-preview
+            The *ExtractSummaryAction*, *RecognizeCustomEntitiesAction*, *ClassifyDocumentAction*,
+            or MultiClassifyDocumentAction input options
 
         .. admonition:: Example:
 
@@ -925,7 +947,7 @@ class TextAnalyticsClient(AsyncTextAnalyticsClientBase):
         display_name = kwargs.pop("display_name", None)
         language_arg = kwargs.pop("language", None)
         language = language_arg if language_arg is not None else self._default_language
-        docs = self._client.models(api_version="v3.1").MultiLanguageBatchInput(
+        docs = self._client.models(api_version="v3.2-preview.1").MultiLanguageBatchInput(
             documents=_validate_input(documents, "language", language)
         )
         show_stats = kwargs.pop("show_stats", False)
@@ -938,7 +960,7 @@ class TextAnalyticsClient(AsyncTextAnalyticsClientBase):
             raise ValueError("Multiple of the same action is not currently supported.")
 
         try:
-            analyze_tasks = self._client.models(api_version="v3.1").JobManifestTasks(
+            analyze_tasks = self._client.models(api_version="v3.2-preview.1").JobManifestTasks(
                 entity_recognition_tasks=[
                     t._to_generated()  # pylint: disable=protected-access
                     for t in [
@@ -984,8 +1006,16 @@ class TextAnalyticsClient(AsyncTextAnalyticsClientBase):
                         == _AnalyzeActionsType.ANALYZE_SENTIMENT
                     ]
                 ],
+                extractive_summarization_tasks=[
+                    t._to_generated()  # pylint: disable=protected-access
+                    for t in [
+                        a
+                        for a in actions
+                        if _determine_action_type(a) == _AnalyzeActionsType.EXTRACT_SUMMARY
+                    ]
+                ]
             )
-            analyze_body = self._client.models(api_version="v3.1").AnalyzeBatchInput(
+            analyze_body = self._client.models(api_version="v3.2-preview.1").AnalyzeBatchInput(
                 display_name=display_name, tasks=analyze_tasks, analysis_input=docs
             )
             return await self._client.begin_analyze(
