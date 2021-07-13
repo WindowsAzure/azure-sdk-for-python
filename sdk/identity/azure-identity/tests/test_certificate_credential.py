@@ -29,9 +29,9 @@ from helpers import (
 )
 
 try:
-    from unittest.mock import Mock, patch
+    from unittest.mock import MagicMock, Mock, patch
 except ImportError:  # python < 3.3
-    from mock import Mock, patch  # type: ignore
+    from mock import MagicMock, Mock, patch  # type: ignore
 
 CERT_PATH = os.path.join(os.path.dirname(__file__), "certificate.pem")
 CERT_WITH_PASSWORD_PATH = os.path.join(os.path.dirname(__file__), "certificate-with-password.pem")
@@ -73,6 +73,25 @@ def test_no_scopes():
     with pytest.raises(ValueError):
         credential.get_token()
 
+
+def test_close():
+    transport = MagicMock()
+    credential = CertificateCredential("tenant-id", "client-id", CERT_PATH, transport=transport)
+    assert transport.__exit__.call_count == 0
+
+    credential.close()
+    assert transport.__exit__.call_count == 1
+
+
+def test_context_manager():
+    transport = MagicMock()
+    credential = CertificateCredential("tenant-id", "client-id", CERT_PATH, transport=transport)
+
+    with credential:
+        assert transport.__enter__.call_count == 1
+
+    assert transport.__enter__.call_count == 1
+    assert transport.__exit__.call_count == 1
 
 def test_policies_configurable():
     policy = Mock(spec_set=SansIOHTTPPolicy, on_request=Mock())

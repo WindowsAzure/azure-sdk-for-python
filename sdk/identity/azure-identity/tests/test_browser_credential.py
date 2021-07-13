@@ -28,9 +28,9 @@ from helpers import (
 )
 
 try:
-    from unittest.mock import ANY, Mock, patch
+    from unittest.mock import ANY, MagicMock, Mock, patch
 except ImportError:  # python < 3.3
-    from mock import ANY, Mock, patch  # type: ignore
+    from mock import ANY, MagicMock, Mock, patch  # type: ignore
 
 
 WEBBROWSER_OPEN = InteractiveBrowserCredential.__module__ + ".webbrowser.open"
@@ -87,6 +87,25 @@ def test_no_scopes():
     with pytest.raises(ValueError):
         InteractiveBrowserCredential().get_token()
 
+
+def test_close():
+    transport = MagicMock()
+    credential = InteractiveBrowserCredential(transport=transport)
+    assert transport.__exit__.call_count == 0
+
+    credential.close()
+    assert transport.__exit__.call_count == 1
+
+
+def test_context_manager():
+    transport = MagicMock()
+    credential = InteractiveBrowserCredential(transport=transport)
+
+    with credential:
+        assert transport.__enter__.call_count == 1
+
+    assert transport.__enter__.call_count == 1
+    assert transport.__exit__.call_count == 1
 
 def test_disable_automatic_authentication():
     """When configured for strict silent auth, the credential should raise when silent auth fails"""

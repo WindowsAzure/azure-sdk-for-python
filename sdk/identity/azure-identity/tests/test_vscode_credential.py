@@ -84,6 +84,26 @@ def test_no_scopes():
         credential.get_token()
 
 
+def test_close():
+    transport = mock.MagicMock()
+    credential = get_credential(transport=transport)
+    assert transport.__exit__.call_count == 0
+
+    credential.close()
+    assert transport.__exit__.call_count == 1
+
+
+def test_context_manager():
+    transport = mock.MagicMock()
+    credential = get_credential(transport=transport)
+
+    with credential:
+        assert transport.__enter__.call_count == 1
+
+    assert transport.__enter__.call_count == 1
+    assert transport.__exit__.call_count == 1
+
+
 def test_policies_configurable():
     policy = mock.Mock(spec_set=SansIOHTTPPolicy, on_request=mock.Mock())
 

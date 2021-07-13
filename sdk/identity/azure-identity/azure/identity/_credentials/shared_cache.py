@@ -68,6 +68,18 @@ class SharedTokenCacheCredential(SharedTokenCacheBase):
         else:
             super(SharedTokenCacheCredential, self).__init__(username=username, **kwargs)
 
+    def __enter__(self):
+        self._client.__enter__()
+        return self
+
+    def __exit__(self, *args):
+        self._client.__exit__(*args)
+
+    def close(self):
+        # type: () -> None
+        """Close the credential's transport session."""
+        self.__exit__()
+
     @log_get_token("SharedTokenCacheCredential")
     def get_token(self, *scopes, **kwargs):  # pylint:disable=unused-argument
         # type (*str, **Any) -> AccessToken
