@@ -834,26 +834,54 @@ class ContainerSasPermissions(object):
     :param bool delete:
         Delete any blob in the container. Note: You cannot grant permissions to
         delete a container with a container SAS. Use an account SAS instead.
-    :param bool delete_previous_version:
-        Delete the previous blob version for the versioning enabled storage account.
     :param bool list:
         List blobs in the container.
+    :param bool delete_previous_version:
+        Delete the previous blob version for the versioning enabled storage account.
     :param bool tag:
         Set or get tags on the blobs in the container.
+    :param bool add:
+        Add a block to any append blob in the container.
+    :param bool create:
+        Write a new blob to the container, snapshot any blob in the container, or copy a blob to
+        a new blob in the container. Note: You cannot grant permissions to create a container
+        with a container SAS. Use an account SAS to create a container instead.
+    :param bool move:
+        Sets the move permission.
+    :param bool execute:
+        Sets the execute permission.
     """
-    def __init__(self, read=False, write=False, delete=False, list=False, delete_previous_version=False, tag=False):  # pylint: disable=redefined-builtin
+    def __init__(self,
+                 read=False,
+                 write=False,
+                 delete=False,
+                 list=False,    # pylint: disable=redefined-builtin
+                 delete_previous_version=False,
+                 tag=False,
+                 add=False,
+                 create=False,
+                 move=False,
+                 execute=False):  # pylint: disable=redefined-builtin
         self.read = read
+        self.add = add
+        self.create = create
         self.write = write
         self.delete = delete
         self.list = list
         self.delete_previous_version = delete_previous_version
         self.tag = tag
+        self.move = move
+        self.execute = execute
         self._str = (('r' if self.read else '') +
+                     ('a' if self.add else '') +
+                     ('c' if self.create else '') +
                      ('w' if self.write else '') +
                      ('d' if self.delete else '') +
                      ('x' if self.delete_previous_version else '') +
                      ('l' if self.list else '') +
-                     ('t' if self.tag else ''))
+                     ('t' if self.tag else '') +
+                     ('m' if self.move else '') +
+                     ('e' if self.execute else ''))
 
     def __str__(self):
         return self._str
@@ -877,8 +905,13 @@ class ContainerSasPermissions(object):
         p_list = 'l' in permission
         p_delete_previous_version = 'x' in permission
         p_tag = 't' in permission
+        p_add = 'a' in permission
+        p_create = 'c' in permission
+        p_move = 'm' in permission
+        p_execute = 'e' in permission
         parsed = cls(read=p_read, write=p_write, delete=p_delete, list=p_list,
-                     delete_previous_version=p_delete_previous_version, tag=p_tag)
+                     delete_previous_version=p_delete_previous_version, tag=p_tag, add=p_add, create=p_create,
+                     move=p_move, execute=p_execute)
 
         return parsed
 
@@ -904,23 +937,44 @@ class BlobSasPermissions(object):
         Delete the previous blob version for the versioning enabled storage account.
     :param bool tag:
         Set or get tags on the blob.
+    :param bool list:
+        Sets the list permission.
+    :param bool move:
+        Sets the move permission.
+    :param bool execute:
+        Sets the execute permission.
     """
-    def __init__(self, read=False, add=False, create=False, write=False,
-                 delete=False, delete_previous_version=False, tag=True):
+    def __init__(self,
+                 read=False,
+                 add=False,
+                 create=False,
+                 write=False,
+                 delete=False,
+                 delete_previous_version=False,
+                 tag=True,
+                 list=False,    # pylint: disable=redefined-builtin
+                 move=False,
+                 execute=False):
         self.read = read
         self.add = add
         self.create = create
         self.write = write
         self.delete = delete
         self.delete_previous_version = delete_previous_version
+        self.list = list
         self.tag = tag
+        self.move = move
+        self.execute = execute
         self._str = (('r' if self.read else '') +
                      ('a' if self.add else '') +
                      ('c' if self.create else '') +
                      ('w' if self.write else '') +
                      ('d' if self.delete else '') +
                      ('x' if self.delete_previous_version else '') +
-                     ('t' if self.tag else ''))
+                     ('l' if self.list else '') +
+                     ('t' if self.tag else '') +
+                     ('m' if self.move else '') +
+                     ('e' if self.execute else ''))
 
     def __str__(self):
         return self._str
@@ -944,10 +998,13 @@ class BlobSasPermissions(object):
         p_write = 'w' in permission
         p_delete = 'd' in permission
         p_delete_previous_version = 'x' in permission
+        p_list = 'l' in permission
         p_tag = 't' in permission
-
+        p_move = 'm' in permission
+        p_execute = 'e' in permission
         parsed = cls(read=p_read, add=p_add, create=p_create, write=p_write, delete=p_delete,
-                     delete_previous_version=p_delete_previous_version, tag=p_tag)
+                     delete_previous_version=p_delete_previous_version, tag=p_tag,
+                     list=p_list, move=p_move, execute=p_execute)
 
         return parsed
 
