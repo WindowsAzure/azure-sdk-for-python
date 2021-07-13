@@ -36,7 +36,7 @@ except ImportError:
     from mock import Mock
 
 # module under test
-from azure.core.exceptions import HttpResponseError, ODataV4Error, ODataV4Format
+from azure.core.exceptions import HttpResponseError, ODataV4Error, ODataV4Format, AzureError
 from azure.core.pipeline.transport import RequestsTransportResponse
 from azure.core.pipeline.transport._base import _HttpResponseBase
 
@@ -251,6 +251,24 @@ class TestExceptions(object):
         exp = HttpResponseError(response=_build_response(json.dumps(message).encode("utf-8")))
         assert exp.error.code == "Conflict"
 
+    def test_azure_error_repr(self):
+        error_message = "Azure error"
+        error = AzureError(message=error_message)
+        repr = error.__repr__()
+        assert error_message in repr
+        assert 'AzureError' in repr
+        assert 'exc_type' in repr
+        assert 'exc_value' in repr
+
+    def test_httpresponse_error_repr(self):
+        error_message = "Http response error"
+        error = HttpResponseError(message=error_message)
+        repr = error.__repr__()
+        assert error_message in repr
+        assert 'HttpResponseError' in repr
+        assert 'exc_type' in repr
+        assert 'exc_value' in repr
+
     def test_null_odata_details(self):
         message = {
             "error": {
@@ -263,3 +281,4 @@ class TestExceptions(object):
         }
         exp = HttpResponseError(response=_build_response(json.dumps(message).encode("utf-8")))
         assert exp.error.code == "501"
+
