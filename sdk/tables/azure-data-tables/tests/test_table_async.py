@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.core.credentials import AzureNamedKeyCredential, AzureSasCredential
 from azure.core.exceptions import ResourceExistsError
@@ -20,7 +20,7 @@ from _shared.asynctestcase import AsyncTableTestCase
 from async_preparers import tables_decorator_async
 
 
-class TableTestAsync(AzureTestCase, AsyncTableTestCase):
+class TableTestAsync(AzureRecordedTestCase, AsyncTableTestCase):
     @tables_decorator_async
     async def test_create_table(self, tables_storage_account_name, tables_primary_storage_account_key):
         # Arrange
@@ -383,7 +383,7 @@ class TableTestAsync(AzureTestCase, AsyncTableTestCase):
             await tsc.delete_table(table.table_name)
 
 
-class TestTablesUnitTest(AsyncTableTestCase):
+class TestTablesUnit(AsyncTableTestCase):
     tables_storage_account_name = "fake_storage_account"
     tables_primary_storage_account_key = "fakeXMZjnGsZGvd4bVr3Il5SeHA"
     credential = AzureNamedKeyCredential(name=tables_storage_account_name, key=tables_primary_storage_account_key)

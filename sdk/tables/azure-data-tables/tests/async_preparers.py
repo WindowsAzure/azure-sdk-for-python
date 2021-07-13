@@ -1,6 +1,7 @@
 import time
 
 from azure.core.credentials import AzureNamedKeyCredential
+from devtools_testutils.aio import RecordedByProxyAsync
 from azure.core.exceptions import HttpResponseError
 
 from devtools_testutils import is_live
@@ -10,6 +11,7 @@ from preparers import CosmosPreparer, TablesPreparer, trim_kwargs_from_test_func
 
 def cosmos_decorator_async(func, **kwargs):
     @CosmosPreparer()
+    @RecordedByProxyAsync
     async def wrapper(*args, **kwargs):
         key = kwargs.pop("tables_primary_cosmos_account_key")
         name = kwargs.pop("tables_cosmos_account_name")
@@ -28,6 +30,7 @@ def cosmos_decorator_async(func, **kwargs):
 
 def tables_decorator_async(func, **kwargs):
     @TablesPreparer()
+    @RecordedByProxyAsync
     async def wrapper(*args, **kwargs):
         key = kwargs.pop("tables_primary_storage_account_key")
         name = kwargs.pop("tables_storage_account_name")

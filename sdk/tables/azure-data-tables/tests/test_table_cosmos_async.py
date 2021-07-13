@@ -1,6 +1,6 @@
 import pytest
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.core.credentials import AzureNamedKeyCredential
 from azure.core.exceptions import ResourceExistsError
@@ -14,7 +14,7 @@ TEST_TABLE_PREFIX = 'pytableasync'
 
 # ------------------------------------------------------------------------------
 
-class TableTestAsync(AzureTestCase, AsyncTableTestCase):
+class TestTableAsync(AzureRecordedTestCase, AsyncTableTestCase):
     @cosmos_decorator_async
     async def test_create_table(self, tables_cosmos_account_name, tables_primary_cosmos_account_key):
         # Arrange

@@ -3,14 +3,14 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.data.tables import TableServiceClient
 from _shared.testcase import TableTestCase
 from preparers import tables_decorator
 
 # --Test Class -----------------------------------------------------------------
-class TableServiceStatsTest(AzureTestCase, TableTestCase):
+class TestTableServiceStats(AzureRecordedTestCase, TableTestCase):
 
     # --Test cases per service ---------------------------------------
     @tables_decorator

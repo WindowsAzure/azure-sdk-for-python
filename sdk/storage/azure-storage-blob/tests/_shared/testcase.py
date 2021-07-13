@@ -9,6 +9,7 @@ import os.path
 import time
 import os
 import logging
+import pdb
 from devtools_testutils import (
     AzureMgmtTestCase,
     AzureMgmtPreparer,
@@ -32,11 +33,10 @@ except ImportError:
 
 import pytest
 
+ENABLE_LOGGING = True
 from devtools_testutils.storage import StorageTestCase
 
 LOGGING_FORMAT = '%(asctime)s %(name)-20s %(levelname)-5s %(message)s'
-os.environ['AZURE_STORAGE_ACCOUNT_NAME'] = STORAGE_ACCOUNT_NAME
-os.environ['AZURE_STORAGE_ACCOUNT_KEY'] = STORAGE_ACCOUNT_KEY
 os.environ['AZURE_TEST_RUN_LIVE'] = os.environ.get('AZURE_TEST_RUN_LIVE', None) or RUN_IN_LIVE
 os.environ['AZURE_SKIP_LIVE_RECORDING'] = os.environ.get('AZURE_SKIP_LIVE_RECORDING', None) or SKIP_LIVE_RECORDING
 
@@ -162,9 +162,11 @@ def storage_account():
 
     try:
         if i_need_to_create_rg:
+            logging.info("I NEED TO CREATE RG")
             rg_name, rg_kwargs = rg_preparer._prepare_create_resource(test_case)
             rg = rg_kwargs['resource_group']
         else:
+            logging.info("I DONT NEED TO CREATE RG")
             rg_name = existing_rg_name or "no_rg_needed"
             rg = FakeResource(
                 name=rg_name,
@@ -172,9 +174,10 @@ def storage_account():
             )
         StorageTestCase._RESOURCE_GROUP = rg
 
+
         try:
             if got_storage_info_from_env:
-
+                logging.info("EXISTING INFO IN ENV")
                 if storage_connection_string:
                     storage_connection_string_parts = dict([
                         part.split('=', 1)
@@ -183,6 +186,7 @@ def storage_account():
 
                 storage_account = None
                 if existing_storage_name:
+                    logging.info("EXISTING NAME IS {}".format(existing_storage_name))
                     storage_name = existing_storage_name
                     storage_account = StorageAccount(
                         location=location,

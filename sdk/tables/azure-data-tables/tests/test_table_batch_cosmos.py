@@ -11,7 +11,7 @@ import sys
 
 import pytest
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.core import MatchConditions
 from azure.core.credentials import AzureSasCredential
@@ -36,7 +36,7 @@ from _shared.testcase import TableTestCase
 from preparers import cosmos_decorator
 
 
-class StorageTableClientTest(AzureTestCase, TableTestCase):
+class TestTableClient(AzureRecordedTestCase, TableTestCase):
     @pytest.mark.skipif(sys.version_info < (3, 0), reason="requires Python3")
     @cosmos_decorator
     def test_batch_insert(self, tables_cosmos_account_name, tables_primary_cosmos_account_key):

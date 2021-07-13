@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 import pytest
 
-from devtools_testutils import AzureTestCase, ResponseCallback
+from devtools_testutils import AzureRecordedTestCase, ResponseCallback
 
 from azure.core.exceptions import (
     HttpResponseError,
@@ -33,7 +33,7 @@ class RetryRequestTransport(RequestsTransport):
         return response
 
 # --Test Class -----------------------------------------------------------------
-class StorageRetryTest(AzureTestCase, TableTestCase):
+class TestStorageRetry(AzureRecordedTestCase, TableTestCase):
 
     def _set_up(self, tables_storage_account_name, tables_primary_storage_account_key, url='table', default_table=True, **kwargs):
         self.table_name = self.get_resource_name('uttable')
@@ -92,7 +92,7 @@ class StorageRetryTest(AzureTestCase, TableTestCase):
             default_table=False,
             retry_mode=RetryMode.Exponential,
             retry_backoff_factor=1
-            )
+        )
 
         callback = ResponseCallback(status=200, new_status=408).override_first_status
         try:

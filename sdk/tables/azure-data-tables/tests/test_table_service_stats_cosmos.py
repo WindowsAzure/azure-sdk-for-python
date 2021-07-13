@@ -5,10 +5,10 @@
 # --------------------------------------------------------------------------
 import pytest
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.data.tables import TableServiceClient
-from _shared.testcase import TableTestCase, SLEEP_DELAY
+from _shared.testcase import TableTestCase
 from preparers import cosmos_decorator
 
 SERVICE_UNAVAILABLE_RESP_BODY = '<?xml version="1.0" encoding="utf-8"?><StorageServiceStats><GeoReplication><Status' \
@@ -21,7 +21,7 @@ SERVICE_LIVE_RESP_BODY = '<?xml version="1.0" encoding="utf-8"?><StorageServiceS
 
 
 # --Test Class -----------------------------------------------------------------
-class TableServiceStatsTest(AzureTestCase, TableTestCase):
+class TestTableServiceStats(AzureRecordedTestCase, TableTestCase):
 
     @staticmethod
     def override_response_body_with_unavailable_status(response):

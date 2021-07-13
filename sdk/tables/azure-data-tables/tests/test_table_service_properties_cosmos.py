@@ -7,7 +7,7 @@
 # --------------------------------------------------------------------------
 import pytest
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.core.exceptions import HttpResponseError
 
@@ -18,11 +18,11 @@ from azure.data.tables import (
     TableCorsRule
 )
 
-from _shared.testcase import TableTestCase, SLEEP_DELAY
+from _shared.testcase import TableTestCase
 from preparers import cosmos_decorator
 # ------------------------------------------------------------------------------
 
-class TableServicePropertiesTest(AzureTestCase, TableTestCase):
+class TestTableServiceProperties(AzureRecordedTestCase, TableTestCase):
     @cosmos_decorator
     def test_too_many_cors_rules(self, tables_cosmos_account_name, tables_primary_cosmos_account_key):
         tsc = TableServiceClient(self.account_url(tables_cosmos_account_name, "cosmos"), credential=tables_primary_cosmos_account_key)

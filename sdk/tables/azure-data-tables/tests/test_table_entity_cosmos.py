@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from dateutil.tz import tzutc, tzoffset
 from math import isnan
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.core import MatchConditions
 from azure.core.credentials import AzureSasCredential
@@ -37,7 +37,7 @@ from preparers import cosmos_decorator
 
 # ------------------------------------------------------------------------------
 
-class StorageTableEntityTest(AzureTestCase, TableTestCase):
+class TestTableEntity(AzureRecordedTestCase, TableTestCase):
     @cosmos_decorator
     def test_url_encoding_at_symbol(self, tables_cosmos_account_name, tables_primary_cosmos_account_key):
 

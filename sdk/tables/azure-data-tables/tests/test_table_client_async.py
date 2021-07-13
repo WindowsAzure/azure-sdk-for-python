@@ -7,7 +7,7 @@ from azure.core.credentials import AzureNamedKeyCredential
 import pytest
 import platform
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.core.credentials import AzureNamedKeyCredential, AzureSasCredential
 from azure.data.tables.aio import TableServiceClient, TableClient
@@ -15,7 +15,6 @@ from azure.data.tables._version import VERSION
 
 from _shared.asynctestcase import AsyncTableTestCase
 from async_preparers import tables_decorator_async
-from devtools_testutils import AzureTestCase
 # ------------------------------------------------------------------------------
 SERVICES = {
     TableServiceClient: 'table',
@@ -27,7 +26,7 @@ _CONNECTION_ENDPOINTS = {'table': 'TableEndpoint'}
 _CONNECTION_ENDPOINTS_SECONDARY = {'table': 'TableSecondaryEndpoint'}
 
 
-class TestTableClient(AzureTestCase, AsyncTableTestCase):
+class TestTableClient(AzureRecordedTestCase, AsyncTableTestCase):
 
     @tables_decorator_async
     async def test_user_agent_default_async(self, tables_storage_account_name, tables_primary_storage_account_key):

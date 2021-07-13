@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 import os
 import sys
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.core import MatchConditions
 from azure.core.credentials import AzureSasCredential, AzureNamedKeyCredential
@@ -38,7 +38,7 @@ from _shared.asynctestcase import AsyncTableTestCase
 from async_preparers import tables_decorator_async
 
 
-class StorageTableBatchTest(AzureTestCase, AsyncTableTestCase):
+class TestTableBatch(AzureRecordedTestCase, AsyncTableTestCase):
     @tables_decorator_async
     async def test_batch_single_insert(self, tables_storage_account_name, tables_primary_storage_account_key):
         # Arrange

@@ -8,7 +8,7 @@
 import time
 import pytest
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.data.tables import (
     TableServiceClient,
@@ -25,7 +25,7 @@ from preparers import tables_decorator
 # ------------------------------------------------------------------------------
 
 
-class TableServicePropertiesTest(AzureTestCase, TableTestCase):
+class TestTableServiceProperties(AzureRecordedTestCase, TableTestCase):
     @tables_decorator
     def test_table_service_properties(self, tables_storage_account_name, tables_primary_storage_account_key):
         # Arrange

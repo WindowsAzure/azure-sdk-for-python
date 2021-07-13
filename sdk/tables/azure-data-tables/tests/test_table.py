@@ -8,7 +8,7 @@
 import pytest
 from datetime import datetime, timedelta
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.data.tables import (
     ResourceTypes,
@@ -26,12 +26,12 @@ from azure.data.tables import (
 from azure.core.credentials import AzureNamedKeyCredential, AzureSasCredential
 from azure.core.exceptions import ResourceExistsError
 
-from _shared.testcase import TableTestCase, TEST_TABLE_PREFIX
+from _shared.testcase import TableTestCase
 from preparers import tables_decorator, tables_decorator
 
 # ------------------------------------------------------------------------------
 
-class StorageTableTest(AzureTestCase, TableTestCase):
+class TestTable(AzureRecordedTestCase, TableTestCase):
     @tables_decorator
     def test_create_properties(self, tables_storage_account_name, tables_primary_storage_account_key):
         # # Arrange
@@ -428,7 +428,6 @@ class StorageTableTest(AzureTestCase, TableTestCase):
             service = TableServiceClient(credential=token, endpoint=account_url)
 
             # Act
-
             sas_table = service.get_table_client(table.table_name)
             entities = list(sas_table.list_entities())
 

@@ -12,7 +12,7 @@ from dateutil.tz import tzutc, tzoffset
 from enum import Enum
 from math import isnan
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.data.tables import (
     TableServiceClient,
@@ -39,7 +39,7 @@ from preparers import tables_decorator
 
 # ------------------------------------------------------------------------------
 
-class StorageTableEntityTest(AzureTestCase, TableTestCase):
+class TestTableEntity(AzureRecordedTestCase, TableTestCase):
     @tables_decorator
     def test_url_encoding_at_symbol(self, tables_storage_account_name, tables_primary_storage_account_key):
 

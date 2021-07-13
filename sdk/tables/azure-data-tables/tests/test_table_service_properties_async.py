@@ -8,7 +8,7 @@
 import time
 import pytest
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.core.exceptions import HttpResponseError
 
@@ -21,7 +21,7 @@ from async_preparers import tables_decorator_async
 # ------------------------------------------------------------------------------
 
 
-class TableServicePropertiesTest(AzureTestCase, TableTestCase):
+class TestTableServiceProperties(AzureRecordedTestCase, TableTestCase):
     @tables_decorator_async
     async def test_table_service_properties_async(self, tables_storage_account_name, tables_primary_storage_account_key):
         # Arrange

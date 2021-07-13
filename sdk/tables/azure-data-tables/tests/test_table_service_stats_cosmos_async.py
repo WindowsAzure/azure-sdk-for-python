@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 import pytest
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.data.tables.aio import TableServiceClient
 
@@ -21,7 +21,7 @@ SERVICE_LIVE_RESP_BODY = '<?xml version="1.0" encoding="utf-8"?><StorageServiceS
                          '>live</Status><LastSyncTime>Wed, 19 Jan 2021 22:28:43 GMT</LastSyncTime></GeoReplication' \
                          '></StorageServiceStats> '
 
-class TableServiceStatsTest(AzureTestCase, AsyncTableTestCase):
+class TestTableServiceStats(AzureRecordedTestCase, AsyncTableTestCase):
 
     @staticmethod
     def override_response_body_with_unavailable_status(response):

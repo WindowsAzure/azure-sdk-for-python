@@ -7,7 +7,7 @@ import pytest
 import platform
 import sys
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.data.tables import TableServiceClient, TableClient
 from azure.data.tables import __version__ as  VERSION
@@ -29,7 +29,7 @@ _CONNECTION_ENDPOINTS = {'table': 'TableEndpoint', 'cosmos': 'TableEndpoint'}
 
 _CONNECTION_ENDPOINTS_SECONDARY = {'table': 'TableSecondaryEndpoint', 'cosmos': 'TableSecondaryEndpoint'}
 
-class TestTableClient(AzureTestCase, TableTestCase):
+class TestTableClient(AzureRecordedTestCase, TableTestCase):
 
     @pytest.mark.skipif(sys.version_info < (3, 0), reason="Malformed string")
     @cosmos_decorator

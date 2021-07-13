@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from dateutil.tz import tzutc, tzoffset
 from math import isnan
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.data.tables import (
     TableEntity,
@@ -37,7 +37,7 @@ from async_preparers import cosmos_decorator_async
 # TODO: change to `with table_client as client:` to close sessions
 # ------------------------------------------------------------------------------
 
-class StorageTableEntityTest(AzureTestCase, AsyncTableTestCase):
+class TestTableEntity(AzureRecordedTestCase, AsyncTableTestCase):
     @cosmos_decorator_async
     async def test_url_encoding_at_symbol(self, tables_cosmos_account_name, tables_primary_cosmos_account_key):
 

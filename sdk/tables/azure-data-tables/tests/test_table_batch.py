@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 import os
 import sys
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.core import MatchConditions
 from azure.core.credentials import AzureNamedKeyCredential, AzureSasCredential
@@ -43,7 +43,7 @@ from preparers import tables_decorator
 TEST_TABLE_PREFIX = 'table'
 #------------------------------------------------------------------------------
 
-class StorageTableBatchTest(AzureTestCase, TableTestCase):
+class TestTableBatch(AzureRecordedTestCase, TableTestCase):
     @pytest.mark.skipif(sys.version_info < (3, 0), reason="requires Python3")
     @tables_decorator
     def test_batch_single_insert(self, tables_storage_account_name, tables_primary_storage_account_key):

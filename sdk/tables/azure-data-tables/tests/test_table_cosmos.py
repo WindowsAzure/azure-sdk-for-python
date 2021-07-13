@@ -6,7 +6,7 @@
 # --------------------------------------------------------------------------
 import pytest
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.core.credentials import AzureNamedKeyCredential
 from azure.core.exceptions import ResourceExistsError
@@ -19,7 +19,7 @@ from preparers import cosmos_decorator
 TEST_TABLE_PREFIX = 'pytablesync'
 # ------------------------------------------------------------------------------
 
-class StorageTableTest(AzureTestCase, TableTestCase):
+class TestStorageTable(AzureRecordedTestCase, TableTestCase):
 
     @cosmos_decorator
     def test_create_table(self, tables_cosmos_account_name, tables_primary_cosmos_account_key):
@@ -185,7 +185,7 @@ class StorageTableTest(AzureTestCase, TableTestCase):
         ts.delete_table(table_name)
 
 
-class TestTableUnitTest(TableTestCase):
+class TestTableUnit(TableTestCase):
     tables_cosmos_account_name = "fake_storage_account"
     tables_primary_cosmos_account_key = "fakeXMZjnGsZGvd4bVr3Il5SeHA"
     credential = AzureNamedKeyCredential(name=tables_cosmos_account_name, key=tables_primary_cosmos_account_key)

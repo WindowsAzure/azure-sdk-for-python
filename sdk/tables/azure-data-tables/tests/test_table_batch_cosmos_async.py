@@ -10,7 +10,7 @@ import os
 import sys
 import pytest
 
-from devtools_testutils import AzureTestCase
+from devtools_testutils import AzureRecordedTestCase
 
 from azure.core import MatchConditions
 from azure.core.credentials import AzureSasCredential, AzureNamedKeyCredential
@@ -40,7 +40,7 @@ from async_preparers import cosmos_decorator_async
 TEST_TABLE_PREFIX = 'table'
 #------------------------------------------------------------------------------
 
-class StorageTableBatchTest(AzureTestCase, AsyncTableTestCase):
+class TestTableBatch(AzureRecordedTestCase, AsyncTableTestCase):
     @cosmos_decorator_async
     async def test_batch_single_insert(self, tables_cosmos_account_name, tables_primary_cosmos_account_key):
         # Arrange
