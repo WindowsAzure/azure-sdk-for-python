@@ -66,6 +66,7 @@ class _SansIOHTTPPolicyRunner(HTTPPolicy, Generic[HTTPRequestType, HTTPResponseT
         :return: The PipelineResponse object.
         :rtype: ~azure.core.pipeline.PipelineResponse
         """
+        response = None
         _await_result(self._policy.on_request, request)
         try:
             response = self.next.send(request)
@@ -74,7 +75,7 @@ class _SansIOHTTPPolicyRunner(HTTPPolicy, Generic[HTTPRequestType, HTTPResponseT
                 raise
         else:
             _await_result(self._policy.on_response, request, response)
-        return response
+        return response # type: ignore
 
 
 class _TransportRunner(HTTPPolicy):
